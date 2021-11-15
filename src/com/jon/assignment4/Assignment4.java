@@ -4,18 +4,14 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.Objects;
-import java.util.Set;
 
 public class Assignment4 {
 
 	private static final File LIB = new File("lib");
-	private static Set<String> clusters = new LinkedHashSet<>();
-	private static HashMap<String, HashSet<DataInstance>> clusterMap = new HashMap<>(); //Map data instance to each cluster
+	private static HashMap<String, HashSet<DataInstance>> clusterMap = new HashMap<>(); //Map data instance to each cluster. Can get clusters from clusterMap::keySet
 
 	private static Double euclideanDistance(DataInstance p1, DataInstance p2, String type) { //Untested, not sure this is what he wants
 		return type.equalsIgnoreCase("length")
@@ -50,14 +46,9 @@ public class Assignment4 {
 		try (BufferedReader br = new BufferedReader(new FileReader(arffFile))) {
 			String line;
 			while ((line = br.readLine()) != null) {
-				if (line.contains("@attribute Cluster")) {
-					clusters.addAll(Arrays.asList(line.split(" ")[2].replace("{", "").replace("}", "").split(",")));
-				} else if (line.contains("@data")) {
+				if (line.contains("@data")) {
 					isData = true;
-					continue;
-				}
-
-				if (isData) {
+				} else if (isData) {
 					processLine(line);
 				}
 			}
