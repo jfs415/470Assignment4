@@ -18,15 +18,18 @@ public class Assignment4 {
 	private static HashMap<String, HashSet<DataInstance>> clusterMap = new HashMap<>(); //Map data instance to each cluster
 
 	private static Double euclideanDistance(DataInstance p1, DataInstance p2, String type) { //Untested, not sure this is what he wants
-		return type.equalsIgnoreCase("length") ? Math.sqrt((p2.petalLength - p1.petalLength) * (p2.petalLength - p1.petalLength) + (p2.sepalLength - p1.sepalLength) * (p2.sepalLength - p1.sepalLength)) :
-                Math.sqrt((p2.petalWidth - p1.petalWidth) * (p2.petalWidth - p1.petalWidth) + (p2.sepalWidth - p1.sepalWidth) * (p2.sepalWidth - p1.sepalWidth));
+		return type.equalsIgnoreCase("length")
+				? Math.sqrt((p2.getPetalLength() - p1.getPetalLength()) * (p2.getPetalLength() - p1.getPetalLength())
+                        + (p2.getSepalLength() - p1.getSepalLength()) * (p2.getSepalLength() - p1.getSepalLength()))
+                : Math.sqrt((p2.getPetalWidth() - p1.getPetalWidth()) * (p2.getPetalWidth() - p1.getPetalWidth())
+                        + (p2.getSepalWidth() - p1.getSepalWidth()) * (p2.getSepalWidth() - p1.getSepalWidth()));
 	}
 
 	private static void cohesion(DataInstance instance1, DataInstance instance2) {
 
 	}
 
-	private static void silhouetteCoefficient (DataInstance instance1, DataInstance instance2) {
+	private static void silhouetteCoefficient(DataInstance instance1, DataInstance instance2) {
 
 	}
 
@@ -80,23 +83,48 @@ public class Assignment4 {
 		}
 	}
 
-	private static class DataInstance {
+}
 
-		private String cluster;
-		private int instance;
-		private double sepalWidth;
-		private double petalWidth;
-		private double sepalLength;
-		private double petalLength;
+class DataInstance {
 
-		public DataInstance(String cluster, int instance, double sepalWidth, double petalWidth, double sepalLength, double petalLength) {
-			this.cluster = cluster;
-			this.instance = instance;
-			this.sepalWidth = sepalWidth;
-			this.sepalLength = sepalLength;
-			this.petalLength = petalLength;
-			this.petalWidth = petalWidth;
-		}
+	private String cluster;
+	private int instance;
+	private double sepalWidth;
+	private double petalWidth;
+	private double sepalLength;
+	private double petalLength;
+
+	public DataInstance(String cluster, int instance, double sepalWidth, double petalWidth, double sepalLength, double petalLength) {
+		this.cluster = cluster;
+		this.instance = instance;
+		this.sepalLength = sepalLength;
+		this.petalLength = petalLength;
+		this.petalWidth = petalWidth;
+		this.sepalWidth = sepalWidth;
+	}
+
+	public String getCluster() {
+		return cluster;
+	}
+
+	public int getInstance() {
+		return instance;
+	}
+
+	public Double getSepalWidth() {
+		return sepalWidth;
+	}
+
+	public Double getPetalWidth() {
+		return petalWidth;
+	}
+
+	public Double getSepalLength() {
+		return sepalLength;
+	}
+
+	public Double getPetalLength() {
+		return petalLength;
 	}
 
 }
