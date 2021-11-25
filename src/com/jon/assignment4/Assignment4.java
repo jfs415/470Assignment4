@@ -5,20 +5,29 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Objects;
 
 public class Assignment4 {
 
 	private static final File LIB = new File("lib");
-	private static HashMap<String, HashSet<DataInstance>> clusterMap = new HashMap<>(); //Map data instance to each cluster. Can get clusters from clusterMap::keySet
+	private static HashMap<String, LinkedHashSet<DataInstance>> clusterMap = new HashMap<>(); //Map data instance to each cluster. Can get clusters from clusterMap::keySet
+	private static LinkedHashSet<DataInstance> instances = new LinkedHashSet<>();
 
-	private static Double euclideanDistance(DataInstance p1, DataInstance p2, String type) { //Untested, not sure this is what he wants
-		return type.equalsIgnoreCase("length")
-				? Math.sqrt((p2.getPetalLength() - p1.getPetalLength()) * (p2.getPetalLength() - p1.getPetalLength())
-                        + (p2.getSepalLength() - p1.getSepalLength()) * (p2.getSepalLength() - p1.getSepalLength()))
-                : Math.sqrt((p2.getPetalWidth() - p1.getPetalWidth()) * (p2.getPetalWidth() - p1.getPetalWidth())
-                        + (p2.getSepalWidth() - p1.getSepalWidth()) * (p2.getSepalWidth() - p1.getSepalWidth()));
+	private static void euclideanDistance(DataInstance p1, DataInstance p2) {
+		double petalLength = Math.sqrt(((p1.getPetalLength() - p2.getPetalLength()) * (p1.getPetalLength() - p2.getPetalLength()))
+                + ((p1.getPetalLength() - p2.getPetalLength()) * (p1.getPetalLength() - p2.getPetalLength())));
+
+		double petalWidth = Math.sqrt(((p1.getPetalWidth() - p2.getPetalWidth()) * (p1.getPetalWidth() - p2.getPetalWidth()))
+                + ((p1.getPetalWidth() - p2.getPetalWidth()) * (p1.getPetalWidth() - p2.getPetalWidth())));
+
+        double sepalLength = Math.sqrt(((p1.getSepalLength() - p2.getSepalLength()) * (p1.getSepalLength() - p2.getSepalLength()))
+                + ((p1.getSepalLength() - p2.getSepalLength()) * (p1.getSepalLength() - p2.getSepalLength())));
+
+		double sepalWidth = Math.sqrt(((p1.getSepalWidth() - p2.getSepalWidth()) * (p1.getSepalWidth() - p2.getSepalWidth()))
+                + ((p1.getSepalWidth() - p2.getSepalWidth()) * (p1.getSepalWidth() - p2.getSepalWidth())));
+
+        System.out.printf("Instance " + p1.getInstance() + "-" + p2.getInstance() + "\nSepal Length Distance: %.1f \nSepal Width Distance: %.1f \nPetal Length Distance: %.1f \nPetal Width Distance: %.1f\n\n", sepalLength, sepalWidth, petalLength, petalWidth);
 	}
 
 	private static void cohesion(DataInstance instance1, DataInstance instance2) {
@@ -37,7 +46,10 @@ public class Assignment4 {
 		double petLength = Double.parseDouble(lineData[3]);
 		double petWidth = Double.parseDouble(lineData[4]);
 		String cluster = lineData[5];
-		clusterMap.computeIfAbsent(lineData[lineData.length - 1], v -> new HashSet<>()).add(new DataInstance(cluster, instance, sepLength, sepWidth, petLength, petWidth));
+
+		DataInstance dataInstance = new DataInstance(cluster, instance, sepLength, sepWidth, petLength, petWidth);
+		instances.add(dataInstance);
+		clusterMap.computeIfAbsent(cluster, v -> new LinkedHashSet<>()).add(dataInstance);
 	}
 
 	private static void readFile(File arffFile) {
@@ -52,6 +64,16 @@ public class Assignment4 {
 					processLine(line);
 				}
 			}
+
+			DataInstance prev = null;
+			for (DataInstance instance : instances) {
+				if (prev != null) {
+					euclideanDistance(prev, instance);
+				}
+
+				prev = instance;
+			}
+
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
@@ -66,7 +88,7 @@ public class Assignment4 {
 				System.exit(0);
 			}
 
-			for (File file : Objects.requireNonNull(LIB.listFiles())) {
+			for (File file : Objects.requireNonNull(LIB.listFiles(), "Empty Lib directory, need ARFF files!")) {
 				readFile(file);
 			}
 		} catch (Exception e) {
@@ -85,13 +107,13 @@ class DataInstance {
 	private double sepalLength;
 	private double petalLength;
 
-	public DataInstance(String cluster, int instance, double sepalWidth, double petalWidth, double sepalLength, double petalLength) {
+	public DataInstance(String cluster, int instance, double sepalLength, double sepalWidth, double petalLength, double petalWidth) {
 		this.cluster = cluster;
 		this.instance = instance;
 		this.sepalLength = sepalLength;
+		this.sepalWidth = sepalWidth;
 		this.petalLength = petalLength;
 		this.petalWidth = petalWidth;
-		this.sepalWidth = sepalWidth;
 	}
 
 	public String getCluster() {
@@ -117,5 +139,11 @@ class DataInstance {
 	public Double getPetalLength() {
 		return petalLength;
 	}
+
+	//TODO: For testing , remove before submission
+	//	@Override
+	//	public String toString() {
+	//		return sepalLength + ", " + sepalWidth + ", " + petalLength + ", " + petalWidth + ", " + instance;
+	//	}
 
 }
