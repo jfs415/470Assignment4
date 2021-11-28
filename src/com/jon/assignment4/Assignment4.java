@@ -4,9 +4,13 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class Assignment4 {
 
@@ -30,12 +34,53 @@ public class Assignment4 {
         System.out.printf("Instance " + p1.getInstance() + "-" + p2.getInstance() + "\nSepal Length Distance: %.1f \nSepal Width Distance: %.1f \nPetal Length Distance: %.1f \nPetal Width Distance: %.1f\n\n", sepalLength, sepalWidth, petalLength, petalWidth);
 	}
 
-	private static void cohesion(DataInstance instance1, DataInstance instance2) {
+	private static void cohesion() { //TODO: This is fucked up still, it's close tho
+		for (Map.Entry<String, LinkedHashSet<DataInstance>> entry : clusterMap.entrySet()) {
+			for (DataInstance instance : entry.getValue()) {
+				double difference = 0.0;
+				Set<DataInstance> otherInstances = entry.getValue().stream().filter(value -> value.getInstance() != instance.getInstance()).collect(Collectors.toSet());
+				for (DataInstance otherInstance : otherInstances) {
+					difference += Math.abs(instance.getValue() - otherInstance.getValue());
+				}
+
+				double cohesion = (difference / otherInstances.size());
+				instance.setAi(cohesion); //TODO: Just set values and output at end after everything's been computed
+				System.out.println("The Cohesion for data instance " + instance.getInstance() + " in " + entry.getKey() + " is " + cohesion);
+			}
+		}
 
 	}
 
-	private static void silhouetteCoefficient(DataInstance instance1, DataInstance instance2) {
+	private static void separation() { //Untested
+		ArrayList<Double> separations = new ArrayList<>(); //Need ArrayList since might have duplicate values
 
+		for (DataInstance instance : instances) {
+			for (Map.Entry<String, LinkedHashSet<DataInstance>> entry : clusterMap.entrySet()) {
+				if (!entry.getKey().equalsIgnoreCase(instance.getCluster())) {
+					double difference = 0.0;
+
+					for (DataInstance entryInstance : entry.getValue()) {
+						difference += Math.abs(instance.getValue() - entryInstance.getValue());
+					}
+
+					separations.add(difference / entry.getValue().size());
+				}
+			}
+
+			double lowest = Double.MAX_VALUE;
+			for (double value : separations) {
+				lowest = Math.min(lowest, value);
+			}
+			System.out.println("Lowest: " + lowest);
+			instance.setBi(lowest);
+		}
+
+	}
+
+	private static void silhouetteCoefficient() {
+		for (DataInstance instance : instances) {
+			instance.setSi(1 - (instance.getAi() / instance.getBi()));
+		}
 	}
 
 	private static void processLine(String line) {
@@ -66,14 +111,20 @@ public class Assignment4 {
 			}
 
 			DataInstance prev = null;
-			for (DataInstance instance : instances) {
-				if (prev != null) {
-					euclideanDistance(prev, instance);
+			for (String cluster : clusterMap.keySet()) { //Get cluster keys
+				System.out.println("Processing data instances for " + cluster);
+				for (DataInstance instance : clusterMap.get(cluster)) { //Iterate through each data instance in each cluster mapped
+					if (prev != null) {
+						euclideanDistance(prev, instance);
+					}
+
+					prev = instance;
 				}
-
-				prev = instance;
 			}
-
+			cohesion();
+			separation();
+			silhouetteCoefficient();
+			//TODO: Print everything out
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
@@ -89,7 +140,10 @@ public class Assignment4 {
 			}
 
 			for (File file : Objects.requireNonNull(LIB.listFiles(), "Empty Lib directory, need ARFF files!")) {
-				readFile(file);
+				//				readFile(file);
+				if (file.getName().equalsIgnoreCase("3.arff")) {
+					readFile(file);
+				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -100,12 +154,16 @@ public class Assignment4 {
 
 class DataInstance {
 
-	private String cluster;
-	private int instance;
-	private double sepalWidth;
-	private double petalWidth;
-	private double sepalLength;
-	private double petalLength;
+	private final String cluster;
+	private final int instance;
+	private final double sepalWidth;
+	private final double petalWidth;
+	private final double sepalLength;
+	private final double petalLength;
+	private Double ai;
+	private Double bi;
+	private Double si;
+	private final double value;
 
 	public DataInstance(String cluster, int instance, double sepalLength, double sepalWidth, double petalLength, double petalWidth) {
 		this.cluster = cluster;
@@ -114,6 +172,10 @@ class DataInstance {
 		this.sepalWidth = sepalWidth;
 		this.petalLength = petalLength;
 		this.petalWidth = petalWidth;
+		this.value = sepalLength + sepalWidth + petalLength + petalWidth;
+		this.ai = 0.0;
+		this.bi = 0.0;
+		this.si = 0.0;
 	}
 
 	public String getCluster() {
@@ -140,10 +202,38 @@ class DataInstance {
 		return petalLength;
 	}
 
-	//TODO: For testing , remove before submission
-	//	@Override
-	//	public String toString() {
-	//		return sepalLength + ", " + sepalWidth + ", " + petalLength + ", " + petalWidth + ", " + instance;
-	//	}
+	public double getValue() {
+		return value;
+	}
+
+	public Double getAi() {
+		return ai;
+	}
+
+	public void setAi(Double ai) {
+		this.ai = ai;
+	}
+
+	public Double getBi() {
+		return bi;
+	}
+
+	public void setBi(Double bi) {
+		this.bi = bi;
+	}
+
+	public Double getSi() {
+		return si;
+	}
+
+	public void setSi(Double si) {
+		this.si = si;
+	}
+
+	//TODO: For testing, remove before submission
+	@Override
+	public String toString() {
+		return instance + ", " + sepalLength + ", " + sepalWidth + ", " + petalLength + ", " + petalWidth + ", " + cluster;
+	}
 
 }
